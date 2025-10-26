@@ -336,7 +336,10 @@ namespace BlasteR.Base
 
                                 methodToInvoke.Invoke(materializedBll, new object[] { childEntity, savedEntities });
                             }
-                            idProperty.SetValue(entity, childEntity.Id);
+
+                            object currentChildIdInParent = idProperty.GetValue(entity);
+                            if (currentChildIdInParent == null || currentChildIdInParent is 0)
+                                idProperty.SetValue(entity, childEntity.Id);
                         }
                     }
                 }
@@ -386,10 +389,14 @@ namespace BlasteR.Base
 
                             var methodToInvoke = materializedBll.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
 
-                            PropertyInfo parentReference = GetParentReferenceOfTheChild(entity, childEntity);
+                            PropertyInfo parentReferenceId = GetParentReferenceOfTheChild(entity, childEntity);
 
-                            if (parentReference != null)
-                                parentReference.SetValue(childEntity, entity.Id);
+                            if (parentReferenceId != null)
+                            {
+                                object currentParentReferenceId = parentReferenceId.GetValue(childEntity);
+                                if (currentParentReferenceId == null || currentParentReferenceId is 0)
+                                    parentReferenceId.SetValue(childEntity, entity.Id);
+                            }
 
                             methodToInvoke.Invoke(materializedBll, new object[] { childEntity, savedEntities });
                         }

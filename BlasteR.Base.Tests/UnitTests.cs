@@ -82,6 +82,98 @@ namespace BlasteR.Base.Tests
         }
 
         [Fact]
+        public void InsertParentChild_NoRewire()
+        {
+            // Arrange
+            FirstBll firstBll = new FirstBll(UnitOfWork);
+            SecondBll secondBll = new SecondBll(UnitOfWork);
+
+            SecondEntity parent = new SecondEntity()
+            {
+                IntValue = 0,
+                StringValue = "Parent"
+            };
+            secondBll.Save(parent);
+
+            FirstEntity child1 = new FirstEntity()
+            {
+                IntValue = 1,
+                StringValue = "Child1"
+            };
+            firstBll.Save(child1);
+
+            FirstEntity child2 = new FirstEntity()
+            {
+                IntValue = 2,
+                StringValue = "Child2"
+            };
+            firstBll.Save(child2);
+
+            parent.FirstEntity = child1;
+            secondBll.Save(parent);
+            parent = secondBll.GetById(parent.Id);
+
+            // Act
+            parent.FirstEntity = child2;
+            secondBll.Save(parent);
+            parent = secondBll.GetById(parent.Id);
+
+            // Assert
+            Assert.NotEqual(child2.Id, parent.FirstEntityId);
+
+            // Cleanup
+            secondBll.Delete(parent);
+            firstBll.Delete(child1);
+            firstBll.Delete(child2);
+        }
+
+        [Fact]
+        public void InsertParentChild_Rewire()
+        {
+            // Arrange
+            FirstBll firstBll = new FirstBll(UnitOfWork);
+            SecondBll secondBll = new SecondBll(UnitOfWork);
+
+            SecondEntity parent = new SecondEntity()
+            {
+                IntValue = 0,
+                StringValue = "Parent"
+            };
+            secondBll.Save(parent);
+
+            FirstEntity child1 = new FirstEntity()
+            {
+                IntValue = 1,
+                StringValue = "Child1"
+            };
+            firstBll.Save(child1);
+
+            FirstEntity child2 = new FirstEntity()
+            {
+                IntValue = 2,
+                StringValue = "Child2"
+            };
+            firstBll.Save(child2);
+
+            parent.FirstEntity = child1;
+            secondBll.Save(parent);
+            parent = secondBll.GetById(parent.Id);
+
+            // Act
+            parent.FirstEntityId = child2.Id;
+            secondBll.Save(parent);
+            parent = secondBll.GetById(parent.Id);
+
+            // Assert
+            Assert.Equal(child2.Id, parent.FirstEntityId);
+
+            // Cleanup
+            secondBll.Delete(parent);
+            firstBll.Delete(child1);
+            firstBll.Delete(child2);
+        }
+
+        [Fact]
         public void InsertParentChildReverse()
         {
             // Arrange

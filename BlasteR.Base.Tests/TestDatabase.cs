@@ -5,8 +5,15 @@ namespace BlasteR.Base.Tests
 {
     public static class TestDatabase
     {
+        private static bool initialized = false;
+
         public static void Initialize(IDbConnection db)
         {
+            if (initialized)
+                return;
+
+            initialized = true;
+
             // Create tables
             db.Execute(@"
                 CREATE TABLE FirstEntities (
@@ -23,7 +30,7 @@ namespace BlasteR.Base.Tests
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     IntValue INTEGER,
                     StringValue TEXT,
-                    FirstEntityId INTEGER,
+                    FirstEntityId INTEGER NULL,
                     CreatedAt DATETIME,
                     ModifiedAt DATETIME,
                     CreatedBy TEXT,
