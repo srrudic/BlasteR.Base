@@ -4,14 +4,14 @@
 	<TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Srdjan Rudic - BlasteR</Authors>
     <Copyright>Srdjan Rudic</Copyright>
-    <Description>Helper library for creating Business Logic Layer / Repository Classes in database oriented applications.</Description>
-    <PackageProjectUrl>https://github.com/blaster7th/BlasteR.Base</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/blaster7th/BlasteR.Base</RepositoryUrl>
+    <Description>Helper library for creating Business Logic Layer / Repository Classes in database centric applications.</Description>
+    <PackageProjectUrl>https://github.com/srrudic/BlasteR.Base</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/srrudic/BlasteR.Base</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>Business Logic Layer, Bll, Repository, Service, C#, .NET, Dapper</PackageTags>
-    <Version>2.0.0-alpha.3</Version>
+    <Version>2.0.0</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
