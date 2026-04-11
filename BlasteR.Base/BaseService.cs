@@ -621,12 +621,22 @@ namespace BlasteR.Base
 
     public interface IBaseBll<T> : IBaseService<T> where T : BaseEntity
     {
-        
     }
     
     public class BaseBll<T> : BaseService<T> where T : BaseEntity
     {
         public BaseBll(IUnitOfWork unitOfWork) : base(unitOfWork)
+        {
+        }
+    }
+
+    public interface IBaseBLL<T> : IBaseService<T> where T : BaseEntity
+    {
+    }
+    
+    public class BaseBLL<T> : BaseService<T> where T : BaseEntity
+    {
+        public BaseBLL(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
     }
