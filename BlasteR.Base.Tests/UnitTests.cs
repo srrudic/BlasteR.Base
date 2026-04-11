@@ -15,7 +15,7 @@ namespace BlasteR.Base.Tests
         public void CRUD()
         {
             // Arrange
-            FirstBll firstBll = new FirstBll(UnitOfWork);
+            FirstService firstService = new FirstService(UnitOfWork);
             var entity = new FirstEntity()
             {
                 IntValue = 1,
@@ -23,40 +23,40 @@ namespace BlasteR.Base.Tests
             };
 
             // Act CREATE
-            firstBll.Save(entity);
+            firstService.Save(entity);
 
             // Assert
-            int entitiesCount = firstBll.GetAll().Count();
+            int entitiesCount = firstService.GetAll().Count();
             Assert.NotEqual(0, entity.Id);
             Assert.NotEqual(0, entitiesCount);
 
             // Act READ
-            entity = firstBll.GetById(entity.Id);
+            entity = firstService.GetById(entity.Id);
 
             // Assert
             Assert.NotNull(entity);
 
             // Act UPDATE
             entity.StringValue = "Test Updated";
-            firstBll.Save(entity);
+            firstService.Save(entity);
 
             // Assert
-            entity = firstBll.GetById(entity.Id);
+            entity = firstService.GetById(entity.Id);
             Assert.Equal("Test Updated", entity.StringValue);
 
             // Act DELETE
-            firstBll.Delete(entity);
+            firstService.Delete(entity);
 
             // Assert
-            Assert.Equal(entitiesCount - 1, firstBll.GetAll().Count());
+            Assert.Equal(entitiesCount - 1, firstService.GetAll().Count());
         }
 
         [Fact]
         public void InsertParentChild()
         {
             // Arrange
-            FirstBll firstBll = new FirstBll(UnitOfWork);
-            SecondBll secondBll = new SecondBll(UnitOfWork);
+            FirstService firstService = new FirstService(UnitOfWork);
+            SecondService secondService = new SecondService(UnitOfWork);
             FirstEntity firstEntity = new FirstEntity()
             {
                 IntValue = 1,
@@ -69,7 +69,7 @@ namespace BlasteR.Base.Tests
             };
 
             // Act
-            firstBll.Save(firstEntity);
+            firstService.Save(firstEntity);
 
             // Assert
             Assert.NotEqual(0, firstEntity.Id);
@@ -77,108 +77,108 @@ namespace BlasteR.Base.Tests
             Assert.Equal(firstEntity.Id, firstEntity.SecondEntity.FirstEntityId);
 
             // Cleanup
-            secondBll.Delete(firstEntity.SecondEntity);
-            firstBll.Delete(firstEntity);
+            secondService.Delete(firstEntity.SecondEntity);
+            firstService.Delete(firstEntity);
         }
 
         [Fact]
         public void InsertParentChild_NoRewire()
         {
             // Arrange
-            FirstBll firstBll = new FirstBll(UnitOfWork);
-            SecondBll secondBll = new SecondBll(UnitOfWork);
+            FirstService firstService = new FirstService(UnitOfWork);
+            SecondService secondService = new SecondService(UnitOfWork);
 
             SecondEntity parent = new SecondEntity()
             {
                 IntValue = 0,
                 StringValue = "Parent"
             };
-            secondBll.Save(parent);
+            secondService.Save(parent);
 
             FirstEntity child1 = new FirstEntity()
             {
                 IntValue = 1,
                 StringValue = "Child1"
             };
-            firstBll.Save(child1);
+            firstService.Save(child1);
 
             FirstEntity child2 = new FirstEntity()
             {
                 IntValue = 2,
                 StringValue = "Child2"
             };
-            firstBll.Save(child2);
+            firstService.Save(child2);
 
             parent.FirstEntity = child1;
-            secondBll.Save(parent);
-            parent = secondBll.GetById(parent.Id);
+            secondService.Save(parent);
+            parent = secondService.GetById(parent.Id);
 
             // Act
             parent.FirstEntity = child2;
-            secondBll.Save(parent);
-            parent = secondBll.GetById(parent.Id);
+            secondService.Save(parent);
+            parent = secondService.GetById(parent.Id);
 
             // Assert
             Assert.NotEqual(child2.Id, parent.FirstEntityId);
 
             // Cleanup
-            secondBll.Delete(parent);
-            firstBll.Delete(child1);
-            firstBll.Delete(child2);
+            secondService.Delete(parent);
+            firstService.Delete(child1);
+            firstService.Delete(child2);
         }
 
         [Fact]
         public void InsertParentChild_Rewire()
         {
             // Arrange
-            FirstBll firstBll = new FirstBll(UnitOfWork);
-            SecondBll secondBll = new SecondBll(UnitOfWork);
+            FirstService firstService = new FirstService(UnitOfWork);
+            SecondService secondService = new SecondService(UnitOfWork);
 
             SecondEntity parent = new SecondEntity()
             {
                 IntValue = 0,
                 StringValue = "Parent"
             };
-            secondBll.Save(parent);
+            secondService.Save(parent);
 
             FirstEntity child1 = new FirstEntity()
             {
                 IntValue = 1,
                 StringValue = "Child1"
             };
-            firstBll.Save(child1);
+            firstService.Save(child1);
 
             FirstEntity child2 = new FirstEntity()
             {
                 IntValue = 2,
                 StringValue = "Child2"
             };
-            firstBll.Save(child2);
+            firstService.Save(child2);
 
             parent.FirstEntity = child1;
-            secondBll.Save(parent);
-            parent = secondBll.GetById(parent.Id);
+            secondService.Save(parent);
+            parent = secondService.GetById(parent.Id);
 
             // Act
             parent.FirstEntityId = child2.Id;
-            secondBll.Save(parent);
-            parent = secondBll.GetById(parent.Id);
+            secondService.Save(parent);
+            parent = secondService.GetById(parent.Id);
 
             // Assert
             Assert.Equal(child2.Id, parent.FirstEntityId);
 
             // Cleanup
-            secondBll.Delete(parent);
-            firstBll.Delete(child1);
-            firstBll.Delete(child2);
+            secondService.Delete(parent);
+            firstService.Delete(child1);
+            firstService.Delete(child2);
         }
 
         [Fact]
         public void InsertParentChildReverse()
         {
             // Arrange
-            FirstBll firstBll = new FirstBll(UnitOfWork);
-            SecondBll secondBll = new SecondBll(UnitOfWork);
+            FirstService firstService = new FirstService(UnitOfWork);
+            SecondService secondService = new SecondService(UnitOfWork);
             SecondEntity secondEntity = new SecondEntity()
             {
                 IntValue = 2,
@@ -191,7 +191,7 @@ namespace BlasteR.Base.Tests
             };
 
             // Act
-            secondBll.Save(secondEntity);
+            secondService.Save(secondEntity);
 
             // Assert
             Assert.NotEqual(0, secondEntity.Id);
@@ -199,35 +199,35 @@ namespace BlasteR.Base.Tests
             Assert.Equal(secondEntity.FirstEntity.Id, secondEntity.FirstEntityId);
 
             // Cleanup
-            secondBll.Delete(secondEntity);
-            firstBll.Delete(secondEntity.FirstEntity);
+            secondService.Delete(secondEntity);
+            firstService.Delete(secondEntity.FirstEntity);
         }
 
         [Fact]
         public void SoftDelete()
         {
             // Arrange
-            SoftDeletableTestBLL softDeletableTestBLL = new SoftDeletableTestBLL(UnitOfWork);
+            SoftDeletableTestService softDeletableTestService = new SoftDeletableTestService(UnitOfWork);
             SoftDeletableTestEntity softDeletableTestEntity = new SoftDeletableTestEntity()
             {
                 IntValue = 1,
                 StringValue = "Test",
             };
 
-            softDeletableTestBLL.Save(softDeletableTestEntity);
+            softDeletableTestService.Save(softDeletableTestEntity);
 
             // Act Soft Delete
-            softDeletableTestBLL.Delete(softDeletableTestEntity);
+            softDeletableTestService.Delete(softDeletableTestEntity);
 
             // Assert
-            Assert.DoesNotContain(softDeletableTestEntity.Id, softDeletableTestBLL.GetAll(false).Select(x => x.Id));
-            Assert.Contains(softDeletableTestEntity.Id, softDeletableTestBLL.GetAll(true).Select(x => x.Id));
+            Assert.DoesNotContain(softDeletableTestEntity.Id, softDeletableTestService.GetAll(false).Select(x => x.Id));
+            Assert.Contains(softDeletableTestEntity.Id, softDeletableTestService.GetAll(true).Select(x => x.Id));
 
             // Act Hard Delete
-            softDeletableTestBLL.Delete(softDeletableTestEntity, true);
+            softDeletableTestService.Delete(softDeletableTestEntity, true);
 
             // Assert
-            Assert.DoesNotContain(softDeletableTestEntity.Id, softDeletableTestBLL.GetAll(true).Select(x => x.Id));
+            Assert.DoesNotContain(softDeletableTestEntity.Id, softDeletableTestService.GetAll(true).Select(x => x.Id));
         }
     }
 }

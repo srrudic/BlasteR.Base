@@ -1,6 +1,6 @@
 ﻿/*
-    This library is intended as a starting point for creating Business Logic Layer in database oriented applications.
-    Copyright (C) 2019 Srdjan Rudic
+    This library is intended as a starting point for creating Services or Business Logic Layer in database oriented applications.
+    Copyright (C) 2026 Srdjan Rudic
     Email: blaster7th@gmail.com
 
     This library is free software: you can redistribute it and/or modify
@@ -28,11 +28,10 @@ using System.Reflection;
 namespace BlasteR.Base
 {
     /// <summary>
-    /// Generic class for accessing data through the Bll layer. Should be used as a base class for every other Bll class.
+    /// Generic class for accessing data through the Service layer. Should be used as a base class for every other Service class.
     /// </summary>
     /// <typeparam name="T">Type used for accessing the data.</typeparam>
-    public interface IBaseBll<T>
-    where T : BaseEntity
+    public interface IBaseService<T> where T : BaseEntity
     {
         T this[int id] { get; set; }
 
@@ -54,7 +53,7 @@ namespace BlasteR.Base
         T Save(T entity);
     }
 
-    public class BaseBll<T> : IBaseBll<T> where T : BaseEntity
+    public class BaseService<T> : IBaseService<T> where T : BaseEntity
     {
         public IUnitOfWork UnitOfWork { get; protected set; }
         public IDbConnection DB => UnitOfWork.DB;
@@ -63,10 +62,10 @@ namespace BlasteR.Base
         public string TableName { get; protected set; }
 
         /// <summary>
-        /// Constructor creates instance of the BaseBll class.
+        /// Constructor creates instance of the BaseService class.
         /// </summary>
         /// <param name="db">DbConnection to the database.</param>
-        public BaseBll(IUnitOfWork unitOfWork)
+        public BaseService(IUnitOfWork unitOfWork)
         {
             try
             {
@@ -301,6 +300,7 @@ namespace BlasteR.Base
                              p.PropertyType == typeof(DateTime) ||
                              p.PropertyType == typeof(DateTimeOffset) ||
                              p.PropertyType == typeof(byte[]) ||
+                             p.PropertyType == typeof(Guid) ||
                              p.PropertyType.IsEnum ||
                              (p.PropertyType.IsGenericType &&
                               p.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))) &&
@@ -325,16 +325,16 @@ namespace BlasteR.Base
                             {
                                 Type childType = property.PropertyType;
 
-                                var materializedBll = MaterializeBll(childType);
+                                var materializedService = MaterializeService(childType);
 
-                                var methodToInvoke = materializedBll.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
+                                var methodToInvoke = materializedService.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
 
                                 PropertyInfo parentReference = GetParentReferenceOfTheChild(entity, childEntity);
 
                                 if (parentReference != null)
                                     parentReference.SetValue(childEntity, entity.Id);
 
-                                methodToInvoke.Invoke(materializedBll, new object[] { childEntity, savedEntities });
+                                methodToInvoke.Invoke(materializedService, new object[] { childEntity, savedEntities });
                             }
 
                             object currentChildIdInParent = idProperty.GetValue(entity);
@@ -385,9 +385,9 @@ namespace BlasteR.Base
                         {
                             Type childType = property.PropertyType;
 
-                            var materializedBll = MaterializeBll(childType);
+                            var materializedService = MaterializeService(childType);
 
-                            var methodToInvoke = materializedBll.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
+                            var methodToInvoke = materializedService.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
 
                             PropertyInfo parentReferenceId = GetParentReferenceOfTheChild(entity, childEntity);
 
@@ -398,7 +398,7 @@ namespace BlasteR.Base
                                     parentReferenceId.SetValue(childEntity, entity.Id);
                             }
 
-                            methodToInvoke.Invoke(materializedBll, new object[] { childEntity, savedEntities });
+                            methodToInvoke.Invoke(materializedService, new object[] { childEntity, savedEntities });
                         }
                     }
                 }
@@ -410,9 +410,9 @@ namespace BlasteR.Base
                     {
                         Type childType = property.PropertyType.GetGenericArguments().FirstOrDefault();
 
-                        var materializedBll = MaterializeBll(childType);
+                        var materializedService = MaterializeService(childType);
 
-                        var methodToInvoke = materializedBll.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
+                        var methodToInvoke = materializedService.GetType().GetMethod("PrivateSave", new Type[] { childType, typeof(List<object>) });
 
                         PropertyInfo parentReference = null;
                         foreach (var childEntity in childEntities)
@@ -423,7 +423,7 @@ namespace BlasteR.Base
                             if (parentReference != null)
                                 parentReference.SetValue(childEntity, entity.Id);
 
-                            methodToInvoke.Invoke(materializedBll, new object[] { (BaseEntity)childEntity, savedEntities });
+                            methodToInvoke.Invoke(materializedService, new object[] { (BaseEntity)childEntity, savedEntities });
                         }
                     }
                 }
@@ -577,13 +577,13 @@ namespace BlasteR.Base
             return null;
         }
 
-        private object MaterializeBll(Type type)
+        private object MaterializeService(Type type)
         {
-            Type baseBllType = typeof(BaseBll<>);
-            Type bllType = baseBllType.MakeGenericType(type);
-            var materializedBll = Activator.CreateInstance(bllType, UnitOfWork);
+            Type BaseServiceType = typeof(BaseService<>);
+            Type serviceType = BaseServiceType.MakeGenericType(type);
+            var materializedService = Activator.CreateInstance(serviceType, UnitOfWork);
 
-            return materializedBll;
+            return materializedService;
         }
 
         private static string lastInsertIdFunction = null;
@@ -619,9 +619,9 @@ namespace BlasteR.Base
         }
     }
 
-    public class BaseBLL<T> : BaseBll<T> where T : BaseEntity
+    public class BaseBll<T> : BaseService<T> where T : BaseEntity
     {
-        public BaseBLL(IUnitOfWork unitOfWork) : base(unitOfWork)
+        public BaseBll(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
     }
