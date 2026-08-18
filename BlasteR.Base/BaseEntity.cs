@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BlasteR.Base
 {
-    public class BaseEntity
+    public abstract class BaseEntity
     {
         [Key]
         public int Id { get; set; }
@@ -20,7 +20,7 @@ namespace BlasteR.Base
         }
     }
     
-    public class SoftDeletableEntity : BaseEntity
+    public abstract class SoftDeletableEntity : BaseEntity
     {
         public bool IsDeleted { get; set; }
         public string DeletedBy { get; set; }

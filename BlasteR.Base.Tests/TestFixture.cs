@@ -1,7 +1,5 @@
 using System;
-using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace BlasteR.Base.Tests
 {
     public class TestFixture : IDisposable
