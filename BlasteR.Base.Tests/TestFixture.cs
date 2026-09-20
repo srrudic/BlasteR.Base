@@ -13,7 +13,7 @@ namespace BlasteR.Base.Tests
             lock (lockObject)
             {
                 UnitOfWork = DbConnectionFactory.GetInMemoryUnitOfWork("TestUser");
-                TestDatabase.Initialize(UnitOfWork.DB);
+                TestDatabase.Initialize(UnitOfWork.DbConnection);
             }
         }
 

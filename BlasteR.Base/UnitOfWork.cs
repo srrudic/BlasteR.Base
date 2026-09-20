@@ -3,45 +3,76 @@ using System.Data;
 
 namespace BlasteR.Base
 {
-
     public interface IUnitOfWork : IDisposable
     {
-        IDbConnection DB { get; }
-        IDbTransaction Transaction { get; }
         string User { get; }
+        IDbConnection DbConnection { get; }
+        IDbTransaction GetOrBeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Unspecified);
         void Commit();
         void Rollback();
     }
 
     public class UnitOfWork : IUnitOfWork
     {
-        public IDbConnection DB { get; protected set; }
-        public IDbTransaction Transaction { get; protected set; }
-        public string User { get; protected set; }
+        public string User { get; private set; }
 
-        public UnitOfWork(IDbConnection db, IDbTransaction transaction, string user)
+        public IDbConnection DbConnection { get; private set; }
+
+        private IDbTransaction transaction;
+
+        public UnitOfWork(IDbConnection dbConnection, IDbTransaction transaction = null, string user = null)
         {
-            DB = db;
-            Transaction = transaction;
-            User = user;
+            if (dbConnection == null)
+                throw new ArgumentNullException(nameof(dbConnection));
+
+            this.DbConnection = dbConnection;
+            this.transaction = transaction;
+        }
+
+        public IDbTransaction GetOrBeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Unspecified)
+        {
+            if (transaction != null)
+                return transaction;
+
+            transaction = DbConnection.BeginTransaction(isolationLevel);
+
+            return transaction;
         }
 
         public void Commit()
         {
-            Transaction?.Commit();
+            try
+            {
+                transaction?.Commit();
+            }
+            finally
+            {
+                ClearTransaction();
+            }
         }
 
         public void Rollback()
         {
-            Transaction?.Rollback();
+            try
+            {
+                transaction?.Rollback();
+            }
+            finally
+            {
+                ClearTransaction();
+            }
         }
 
         public void Dispose()
         {
-            Transaction?.Dispose();
-            if (DB?.State == ConnectionState.Open)
-                DB?.Close();
-            DB?.Dispose();
+            ClearTransaction();
+            DbConnection?.Dispose();
+        }
+
+        private void ClearTransaction()
+        {
+            transaction?.Dispose();
+            transaction = null;
         }
     }
 }

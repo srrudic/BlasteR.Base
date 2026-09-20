@@ -11,14 +11,14 @@
     <PackageReleaseNotes />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>Service Layer, Business Logic Layer, Bll, Service, C#, .NET, Dapper</PackageTags>
-    <Version>2.0.5</Version>
+    <Version>2.1.0</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-		<PackageReference Include="Dapper" Version="2.1.79" />
+		<PackageReference Include="Dapper" Version="2.1.86" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
 
