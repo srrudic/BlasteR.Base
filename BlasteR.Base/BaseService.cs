@@ -37,6 +37,7 @@ namespace BlasteR.Base
 
         IUnitOfWork UnitOfWork { get; }
         IDbConnection DB { get; }
+        IDbTransaction Transaction { get; }
         IDbTransaction GetOrBeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Unspecified);
 
         int Delete(IEnumerable<int> entityIds, bool forceHardDelete = false);
@@ -57,6 +58,7 @@ namespace BlasteR.Base
     {
         public IUnitOfWork UnitOfWork { get; protected set; }
         public IDbConnection DB => UnitOfWork.DbConnection;
+        public IDbTransaction Transaction => UnitOfWork.Transaction;
         public string User { get; protected set; }
         public string TableName { get; protected set; }
 
@@ -113,7 +115,7 @@ namespace BlasteR.Base
             try
             {
                 string sql = $"SELECT * FROM {TableName} WHERE Id = @id;";
-                result = DB.QuerySingle<T>(sql, param: new { id });
+                result = DB.QuerySingle<T>(sql, param: new { id }, transaction: Transaction);
             }
             catch (Exception ex)
             {
@@ -138,7 +140,7 @@ namespace BlasteR.Base
             try
             {
                 string sql = $"SELECT * FROM {TableName} WHERE Id IN @entityIds ORDER BY CreatedAt;";
-                result = DB.Query<T>(sql, param: new { entityIds }).ToList();
+                result = DB.Query<T>(sql, param: new { entityIds }, transaction: Transaction).ToList();
             }
             catch (Exception ex)
             {
@@ -167,7 +169,7 @@ namespace BlasteR.Base
 
                 string sql = $"SELECT * FROM {TableName}{excludeDeleted} ORDER BY CreatedAt;";
 
-                result = DB.Query<T>(sql, param: null).ToList();
+                result = DB.Query<T>(sql, param: null, transaction: Transaction).ToList();
             }
             catch (Exception ex)
             {
@@ -362,7 +364,7 @@ namespace BlasteR.Base
                 string lastIdFunction = GetLastInsertIdFunction(DB);
                 insertQuery += $" {lastIdFunction};";
 
-                entity.Id = DB.ExecuteScalar<int>(insertQuery, param: entity, transaction: GetOrBeginTransaction());
+                entity.Id = DB.ExecuteScalar<int>(insertQuery, param: entity, transaction: Transaction);
             }
             else
             {
@@ -370,7 +372,7 @@ namespace BlasteR.Base
                 entity.ModifiedBy = User;
                 var updateQuery = $"UPDATE {TableName} SET {string.Join(",", properties.Select(p => $"`{p.Name}`=@{p.Name}"))} WHERE Id=@Id " +
                                     $"AND ({string.Join(" OR ", propertiesWOModified.Select(p => $"((`{p.Name}`!=@{p.Name}) OR (`{p.Name}` IS NULL AND @{p.Name} IS NOT NULL) OR (`{p.Name}` IS NOT NULL AND @{p.Name} IS NULL))"))})";
-                DB.Execute(updateQuery, param: entity, transaction: GetOrBeginTransaction());
+                DB.Execute(updateQuery, param: entity, transaction: Transaction);
             }
 
             savedEntities.Add(entity);
@@ -452,7 +454,7 @@ namespace BlasteR.Base
                 if (typeof(SoftDeletableEntity).IsAssignableFrom(typeof(T)) && !forceHardDelete)
                     sql = $"UPDATE {TableName} SET IsDeleted = TRUE, DeletedAt = @deletedAt, DeletedBy = @deletedBy WHERE Id = @id;";
 
-                result = DB.Execute(sql, param: new { id, deletedAt = DateTime.Now, deletedBy = User }, transaction: GetOrBeginTransaction()) > 0;
+                result = DB.Execute(sql, param: new { id, deletedAt = DateTime.Now, deletedBy = User }, transaction: Transaction) > 0;
             }
             catch (Exception ex)
             {
@@ -495,7 +497,7 @@ namespace BlasteR.Base
                 if (typeof(SoftDeletableEntity).IsAssignableFrom(typeof(T)) && !forceHardDelete)
                     sql = $"UPDATE {TableName} SET IsDeleted = TRUE, DeletedAt = @deletedAt, DeletedBy = @deletedBy WHERE Id IN @entityIds;";
 
-                result = DB.Execute(sql, param: new { entityIds, deletedAt = DateTime.Now, deletedBy = User }, transaction: GetOrBeginTransaction());
+                result = DB.Execute(sql, param: new { entityIds, deletedAt = DateTime.Now, deletedBy = User }, transaction: Transaction);
             }
             catch (Exception ex)
             {
@@ -537,7 +539,7 @@ namespace BlasteR.Base
                 if (typeof(SoftDeletableEntity).IsAssignableFrom(typeof(T)) && !forceHardDelete)
                     sql = $"UPDATE {TableName} SET IsDeleted = TRUE, DeletedAt = @deletedAt, DeletedBy = @deletedBy;";
 
-                result = DB.Execute(sql, param: new { deletedAt = DateTime.Now, deletedBy = User }, transaction: GetOrBeginTransaction());
+                result = DB.Execute(sql, param: new { deletedAt = DateTime.Now, deletedBy = User }, transaction: Transaction);
             }
             catch (Exception ex)
             {

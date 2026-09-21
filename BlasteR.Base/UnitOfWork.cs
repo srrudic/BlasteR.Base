@@ -5,8 +5,9 @@ namespace BlasteR.Base
 {
     public interface IUnitOfWork : IDisposable
     {
-        string User { get; }
         IDbConnection DbConnection { get; }
+        IDbTransaction Transaction { get; }
+        string User { get; }
         IDbTransaction GetOrBeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Unspecified);
         void Commit();
         void Rollback();
@@ -14,11 +15,10 @@ namespace BlasteR.Base
 
     public class UnitOfWork : IUnitOfWork
     {
-        public string User { get; private set; }
+        public IDbConnection DbConnection { get; }
 
-        public IDbConnection DbConnection { get; private set; }
-
-        private IDbTransaction transaction;
+        public IDbTransaction Transaction { get; private set; }
+        public string User { get; }
 
         public UnitOfWork(IDbConnection dbConnection, IDbTransaction transaction = null, string user = null)
         {
@@ -26,24 +26,44 @@ namespace BlasteR.Base
                 throw new ArgumentNullException(nameof(dbConnection));
 
             this.DbConnection = dbConnection;
-            this.transaction = transaction;
+            this.Transaction = transaction;
+            this.User = user;
         }
 
         public IDbTransaction GetOrBeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Unspecified)
         {
-            if (transaction != null)
-                return transaction;
+            if (Transaction != null)
+                return Transaction;
 
-            transaction = DbConnection.BeginTransaction(isolationLevel);
+            if (DbConnection.State != ConnectionState.Open)
+                DbConnection.Open();
 
-            return transaction;
+            Transaction = DbConnection.BeginTransaction(isolationLevel);
+
+            return Transaction;
         }
 
         public void Commit()
         {
+            if (Transaction == null)
+                return;
+
             try
             {
-                transaction?.Commit();
+                Transaction.Commit();
+            }
+            catch
+            {
+                try
+                {
+                    Transaction.Rollback();
+                }
+                catch
+                {
+                    // Must not mask the original exception.
+                }
+
+                throw;
             }
             finally
             {
@@ -53,9 +73,12 @@ namespace BlasteR.Base
 
         public void Rollback()
         {
+            if (Transaction == null)
+                return;
+
             try
             {
-                transaction?.Rollback();
+                Transaction.Rollback();
             }
             finally
             {
@@ -71,8 +94,16 @@ namespace BlasteR.Base
 
         private void ClearTransaction()
         {
-            transaction?.Dispose();
-            transaction = null;
+            try
+            {
+                Transaction?.Dispose();
+            }
+            catch
+            {
+                // Must not mask the original exception.
+            }
+
+            Transaction = null;
         }
     }
 }
